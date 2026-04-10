@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/tabs";
 import { AboutTab } from "./about-tab";
 import { CommentsSection } from "@/components/comments/comments-section";
+import { DevlogSection } from "@/components/devlog/devlog-section";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -272,12 +273,10 @@ export default async function ProjectDetailPage({ params }: Props) {
           </TabsContent>
 
           <TabsContent value="devlog" className="mt-6">
-            <p
-              className="text-sm"
-              style={{ color: "#F0F0F0", opacity: 0.6 }}
-            >
-              Chưa có devlog.
-            </p>
+            <DevlogSection
+              projectId={id}
+              projectOwnerId={project.owner_id}
+            />
           </TabsContent>
 
           <TabsContent value="comments" className="mt-6">
