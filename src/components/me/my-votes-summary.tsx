@@ -14,23 +14,32 @@ const CATEGORIES: { key: VoteRow["category"]; label: string }[] = [
 ];
 
 export function MyVotesSummary({ votes }: MyVotesSummaryProps) {
-  const voteMap = new Map(votes.map((v) => [v.category, v.project_title]));
+  const votesByCategory = new Map<string, string[]>();
+  for (const v of votes) {
+    const titles = votesByCategory.get(v.category) ?? [];
+    if (v.project_title) titles.push(v.project_title);
+    votesByCategory.set(v.category, titles);
+  }
 
   return (
     <div className="space-y-2">
       {CATEGORIES.map(({ key, label }) => {
-        const projectTitle = voteMap.get(key);
+        const titles = votesByCategory.get(key) ?? [];
         return (
           <div
             key={key}
-            className="flex items-center justify-between rounded-lg border border-[#3E5E63] bg-[#214C54]/50 px-4 py-3"
+            className="rounded-lg border border-[#3E5E63] bg-[#214C54]/50 px-4 py-3"
           >
             <span className="text-sm font-medium text-[#FFD94C]">{label}</span>
-            <span className="text-sm text-[#F0F0F0]">
-              {projectTitle ?? (
-                <span className="text-[#F0F0F0]/40 italic">Chưa vote</span>
+            <div className="mt-1 space-y-1">
+              {titles.length > 0 ? (
+                titles.map((title, i) => (
+                  <p key={i} className="text-sm text-[#F0F0F0]">{title}</p>
+                ))
+              ) : (
+                <p className="text-sm text-[#F0F0F0]/40 italic">Chưa vote</p>
               )}
-            </span>
+            </div>
           </div>
         );
       })}

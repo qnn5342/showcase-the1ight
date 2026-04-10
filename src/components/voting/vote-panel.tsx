@@ -61,8 +61,6 @@ export function VotePanel({
       }
       if (result.toggled === "off") {
         toast.success("Đã bỏ vote.");
-      } else if (result.toggled === "swapped" && result.swappedFrom) {
-        toast.success(`Đã chuyển vote từ "${result.swappedFrom.title}".`);
       } else {
         toast.success("Đã vote thành công!");
       }
@@ -108,7 +106,7 @@ export function VotePanel({
           if (isSelf) {
             return (
               <Tooltip key={key}>
-                <TooltipTrigger>{button}</TooltipTrigger>
+                <TooltipTrigger render={button} />
                 <TooltipContent>
                   <p>Không thể vote cho dự án của mình</p>
                 </TooltipContent>

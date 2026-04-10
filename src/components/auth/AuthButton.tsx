@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { signInWithGoogle, signOut } from "@/lib/actions/auth";
 import Image from "next/image";
+import Link from "next/link";
 
 export async function AuthButton() {
   const supabase = await createClient();
@@ -30,7 +31,7 @@ export async function AuthButton() {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2">
+      <Link href="/me" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
         {avatarUrl ? (
           <Image src={avatarUrl} alt={displayName} width={32} height={32} className="rounded-full ring-2 ring-[#3E5E63]" />
         ) : (
@@ -39,7 +40,7 @@ export async function AuthButton() {
           </div>
         )}
         <span className="hidden text-sm text-[#F0F0F0] sm:block">{displayName}</span>
-      </div>
+      </Link>
       <form action={signOut}>
         <button type="submit" className="rounded-lg border border-[#3E5E63] px-3 py-1.5 text-xs text-[#F0F0F0]/70 transition-colors hover:border-[#FFD94C] hover:text-[#FFD94C]">
           Đăng xuất

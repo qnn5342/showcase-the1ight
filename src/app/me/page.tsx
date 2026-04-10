@@ -91,32 +91,25 @@ export default async function MePage() {
           <h1 className="text-2xl font-bold" style={{ color: "#FDF5DA" }}>
             {displayName}
           </h1>
-          <p className="text-sm text-[#F0F0F0]/50 mt-0.5">
-            Tên và ảnh được lấy từ Google — không thể chỉnh sửa.
-          </p>
+          {profile?.bio && (
+            <p className="text-sm text-[#F0F0F0]/70 mt-0.5">{profile.bio}</p>
+          )}
         </div>
       </div>
 
-      {/* Edit Profile */}
-      <section className="rounded-xl border border-[#3E5E63] bg-[#214C54] p-6 space-y-4">
-        <h2 className="text-lg font-semibold" style={{ color: "#FDF5DA" }}>
-          Chỉnh sửa hồ sơ
-        </h2>
-        <EditProfileForm
-          defaultValues={{
-            bio: profile?.bio ?? "",
-            github_url: profile?.github_url ?? "",
-            linkedin_url: profile?.linkedin_url ?? "",
-            website_url: profile?.website_url ?? "",
-          }}
-        />
-      </section>
-
       {/* My Projects */}
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold" style={{ color: "#FDF5DA" }}>
-          Dự án của bạn
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold" style={{ color: "#FDF5DA" }}>
+            Dự án của bạn
+          </h2>
+          <Link
+            href="/submit"
+            className="inline-flex items-center gap-1 rounded-lg bg-[#FFD94C] px-3 py-1.5 text-xs font-semibold text-[#15333B] transition-opacity hover:opacity-90"
+          >
+            + Nộp dự án
+          </Link>
+        </div>
         {!projects || projects.length === 0 ? (
           <p className="text-sm text-[#F0F0F0]/50">
             Bạn chưa nộp dự án nào.{" "}
@@ -128,19 +121,27 @@ export default async function MePage() {
           <ul className="space-y-2">
             {projects.map((project) => (
               <li key={project.id}>
-                <Link
-                  href={`/projects/${project.id}`}
-                  className="flex items-center justify-between rounded-lg border border-[#3E5E63] bg-[#214C54]/50 px-4 py-3 transition-colors hover:border-[#FFD94C]/50 hover:bg-[#214C54]"
-                >
-                  <span className="text-sm font-medium text-[#F0F0F0]">
-                    {project.title}
-                  </span>
-                  <Badge
-                    className={`text-xs border ${STATUS_COLOR[project.status] ?? "bg-[#3E5E63] text-[#F0F0F0]"}`}
+                <div className="flex items-center justify-between rounded-lg border border-[#3E5E63] bg-[#214C54]/50 px-4 py-3">
+                  <Link
+                    href={`/projects/${project.id}`}
+                    className="text-sm font-medium text-[#F0F0F0] flex-1 hover:text-[#FFD94C] transition-colors"
                   >
-                    {STATUS_LABEL[project.status] ?? project.status}
-                  </Badge>
-                </Link>
+                    {project.title}
+                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      className={`text-xs border ${STATUS_COLOR[project.status] ?? "bg-[#3E5E63] text-[#F0F0F0]"}`}
+                    >
+                      {STATUS_LABEL[project.status] ?? project.status}
+                    </Badge>
+                    <Link
+                      href={`/projects/${project.id}/edit`}
+                      className="text-xs text-[#FFD94C] hover:underline"
+                    >
+                      Sửa
+                    </Link>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>
@@ -160,6 +161,23 @@ export default async function MePage() {
           </p>
         )}
       </section>
+
+      {/* Edit Profile — collapsible */}
+      <details className="rounded-xl border border-[#3E5E63] bg-[#214C54]">
+        <summary className="cursor-pointer px-6 py-4 text-lg font-semibold select-none" style={{ color: "#FDF5DA" }}>
+          Chỉnh sửa hồ sơ
+        </summary>
+        <div className="px-6 pb-6 pt-2">
+          <EditProfileForm
+            defaultValues={{
+              bio: profile?.bio ?? "",
+              github_url: profile?.github_url ?? "",
+              linkedin_url: profile?.linkedin_url ?? "",
+              website_url: profile?.website_url ?? "",
+            }}
+          />
+        </div>
+      </details>
     </div>
   );
 }

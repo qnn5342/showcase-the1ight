@@ -49,41 +49,20 @@ export async function upsertVote(projectId: string, category: VoteCategory) {
     return { error: "Phiên vote chưa mở hoặc đã kết thúc." };
   }
 
-  // Check existing vote for (voter_id, category, cohort_id)
+  // Check existing vote for (voter_id, project_id, category)
   const { data: existingVote } = await supabase
     .from("votes")
-    .select("id, project_id")
+    .select("id")
     .eq("voter_id", user.id)
+    .eq("project_id", projectId)
     .eq("category", category)
-    .eq("cohort_id", cohortId)
     .maybeSingle();
 
   if (existingVote) {
-    if (existingVote.project_id === projectId) {
-      // Toggle off — delete
-      await supabase.from("votes").delete().eq("id", existingVote.id);
-      revalidatePath(`/projects/${projectId}`);
-      return { success: true, toggled: "off" };
-    } else {
-      // Swap: get old project title then upsert
-      const { data: oldProject } = await supabase
-        .from("projects")
-        .select("title")
-        .eq("id", existingVote.project_id)
-        .single();
-
-      await supabase
-        .from("votes")
-        .update({ project_id: projectId, updated_at: new Date().toISOString() })
-        .eq("id", existingVote.id);
-
-      revalidatePath(`/projects/${projectId}`);
-      return {
-        success: true,
-        toggled: "swapped",
-        swappedFrom: { title: oldProject?.title ?? "dự án trước" },
-      };
-    }
+    // Toggle off — delete
+    await supabase.from("votes").delete().eq("id", existingVote.id);
+    revalidatePath(`/projects/${projectId}`);
+    return { success: true, toggled: "off" };
   }
 
   // Insert new vote

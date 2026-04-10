@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { projectSchema, type ProjectFormValues } from "@/lib/validations/project";
-import { createProject } from "@/lib/actions/project";
+import { createProject, updateProject } from "@/lib/actions/project";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,9 +12,16 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { CoverUpload } from "@/components/submit/cover-upload";
 import { TagSelector } from "@/components/submit/tag-selector";
+import { CohortSelector } from "@/components/submit/cohort-selector";
 import { Loader2 } from "lucide-react";
 
-export function SubmitForm() {
+interface SubmitFormProps {
+  projectId?: string;
+  initialValues?: Partial<ProjectFormValues>;
+}
+
+export function SubmitForm({ projectId, initialValues }: SubmitFormProps) {
+  const isEdit = !!projectId;
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string[] | null>(null);
 
@@ -28,14 +35,15 @@ export function SubmitForm() {
   } = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
-      title: "",
-      tagline: "",
-      live_url: "",
-      github_url: "",
-      description: "",
-      cover_image_url: "",
-      status: "draft",
-      tags: [],
+      title: initialValues?.title ?? "",
+      tagline: initialValues?.tagline ?? "",
+      live_url: initialValues?.live_url ?? "",
+      github_url: initialValues?.github_url ?? "",
+      description: initialValues?.description ?? "",
+      cover_image_url: initialValues?.cover_image_url ?? "",
+      cohort_id: initialValues?.cohort_id ?? "",
+      status: initialValues?.status ?? "draft",
+      tags: initialValues?.tags ?? [],
     },
   });
 
@@ -45,7 +53,9 @@ export function SubmitForm() {
     setSubmitting(true);
     setServerError(null);
     try {
-      const result = await createProject(data);
+      const result = isEdit
+        ? await updateProject(projectId, data)
+        : await createProject(data);
       if (result?.error) {
         if ("_form" in result.error) {
           setServerError(result.error._form as string[]);
@@ -153,6 +163,27 @@ export function SubmitForm() {
         />
       </div>
 
+      {/* Course & Cohort */}
+      <div className="space-y-1.5">
+        <Label className="text-[#FDF5DA]">
+          Khoá & Lớp <span className="text-[#FFD94C]">*</span>
+        </Label>
+        <Controller
+          name="cohort_id"
+          control={control}
+          render={({ field }) => (
+            <CohortSelector
+              value={field.value}
+              onChange={field.onChange}
+              disabled={isEdit}
+            />
+          )}
+        />
+        {errors.cohort_id && (
+          <p className="text-red-400 text-sm">{errors.cohort_id.message}</p>
+        )}
+      </div>
+
       {/* Tags */}
       <div className="space-y-1.5">
         <Label className="text-[#FDF5DA]">
@@ -214,6 +245,8 @@ export function SubmitForm() {
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             Đang submit...
           </>
+        ) : isEdit ? (
+          statusValue === "published" ? "Lưu & Publish" : "Lưu thay đổi"
         ) : statusValue === "published" ? (
           "Submit & Publish"
         ) : (

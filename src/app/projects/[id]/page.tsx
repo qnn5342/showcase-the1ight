@@ -185,6 +185,7 @@ export default async function ProjectDetailPage({ params }: Props) {
               src={project.cover_image_url}
               alt={project.title}
               fill
+              sizes="(max-width: 1024px) 100vw, 896px"
               className="object-cover"
               priority
             />
@@ -250,6 +251,19 @@ export default async function ProjectDetailPage({ params }: Props) {
 
         {/* Action buttons */}
         <div className="flex gap-3 flex-wrap items-center">
+          {user?.id === project.owner_id && (
+            <Link
+              href={`/projects/${id}/edit`}
+              className="inline-flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm font-medium transition-opacity hover:opacity-80"
+              style={{
+                borderColor: "#FFD94C",
+                color: "#FFD94C",
+                backgroundColor: "transparent",
+              }}
+            >
+              Chỉnh sửa
+            </Link>
+          )}
           {project.live_url && !project.is_offline && (
             <a
               href={project.live_url}
@@ -321,7 +335,7 @@ export default async function ProjectDetailPage({ params }: Props) {
         </Tabs>
       </div>
       {/* Right sidebar — VotePanel */}
-      {canVote && sessionStatus === "open" && (
+      {user && sessionStatus === "open" && (
         <aside className="hidden lg:block w-64 shrink-0 sticky top-24">
           <VotePanel
             projectId={id}
@@ -335,7 +349,7 @@ export default async function ProjectDetailPage({ params }: Props) {
       )}
       </div>
       {/* Mobile VotePanel — below hero */}
-      {canVote && sessionStatus === "open" && (
+      {user && sessionStatus === "open" && (
         <div className="lg:hidden mt-6">
           <VotePanel
             projectId={id}
@@ -349,7 +363,7 @@ export default async function ProjectDetailPage({ params }: Props) {
       )}
       </div>
       {/* Vote bottom bar */}
-      {canVote && sessionStatus === "open" && (
+      {user && sessionStatus === "open" && (
         <VoteBottomBar userVotes={userVotes} />
       )}
     </main>

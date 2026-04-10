@@ -20,7 +20,7 @@ export function VoteBottomBar({ userVotes }: VoteBottomBarProps) {
         <span className="font-bold text-base" style={{ color: "#FFD94C" }}>
           {usedCount}
         </span>
-        <span style={{ color: "#F0F0F0" }}>/3 đã dùng</span>
+        <span style={{ color: "#F0F0F0" }}> phiếu</span>
       </p>
     </div>
   );
