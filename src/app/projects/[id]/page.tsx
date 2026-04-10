@@ -17,6 +17,7 @@ import { DevlogSection } from "@/components/devlog/devlog-section";
 import { VotePanel } from "@/components/voting/vote-panel";
 import { VoteBottomBar } from "@/components/voting/vote-bottom-bar";
 import { getUserVotes } from "@/lib/actions/votes";
+import { OfflineBadge } from "@/components/projects/offline-badge";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -248,7 +249,7 @@ export default async function ProjectDetailPage({ params }: Props) {
         </div>
 
         {/* Action buttons */}
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-3 flex-wrap items-center">
           {project.live_url && !project.is_offline && (
             <a
               href={project.live_url}
@@ -260,6 +261,7 @@ export default async function ProjectDetailPage({ params }: Props) {
               Xem demo →
             </a>
           )}
+          {project.is_offline && <OfflineBadge />}
           {project.github_url && (
             <a
               href={project.github_url}
