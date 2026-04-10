@@ -33,6 +33,13 @@ export function CoverUpload({ value, onChange }: CoverUploadProps) {
         });
 
         const supabase = createClient();
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setError("Bạn cần đăng nhập để upload ảnh.");
+          return;
+        }
+
         const ext = file.name.split(".").pop() || "jpg";
         const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 

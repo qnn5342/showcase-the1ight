@@ -43,6 +43,51 @@ async function ProjectGrid({
     .eq("status", "published")
     .order("created_at", { ascending: sort === "oldest" });
 
+  if (tag) {
+    const { data: tagRow } = await supabase
+      .from("tags")
+      .select("id")
+      .eq("name", tag)
+      .single();
+
+    if (!tagRow) {
+      return (
+        <div className="col-span-full flex flex-col items-center gap-4 py-20">
+          <p className="text-[#F0F0F0]/50 text-lg">Chưa có dự án nào.</p>
+          <Link
+            href="/submit"
+            className="rounded-lg bg-[#FFD94C] px-5 py-2.5 text-sm font-semibold text-[#15333B] transition-opacity hover:opacity-90"
+          >
+            Nộp dự án đầu tiên
+          </Link>
+        </div>
+      );
+    }
+
+    const { data: taggedIds } = await supabase
+      .from("project_tags")
+      .select("project_id")
+      .eq("tag_id", tagRow.id);
+
+    const ids = (taggedIds ?? []).map((r) => r.project_id);
+
+    if (ids.length === 0) {
+      return (
+        <div className="col-span-full flex flex-col items-center gap-4 py-20">
+          <p className="text-[#F0F0F0]/50 text-lg">Chưa có dự án nào.</p>
+          <Link
+            href="/submit"
+            className="rounded-lg bg-[#FFD94C] px-5 py-2.5 text-sm font-semibold text-[#15333B] transition-opacity hover:opacity-90"
+          >
+            Nộp dự án đầu tiên
+          </Link>
+        </div>
+      );
+    }
+
+    query = query.in("id", ids);
+  }
+
   const { data: projects, error } = await query;
 
   if (error) {
@@ -53,20 +98,7 @@ async function ProjectGrid({
     );
   }
 
-  // Client-side tag filter (Supabase join filter is complex, do it in memory)
-  const filtered = tag
-    ? (projects ?? []).filter((p) =>
-        p.project_tags?.some(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (pt: any) => {
-            const tagsVal = pt.tags;
-            if (!tagsVal) return false;
-            if (Array.isArray(tagsVal)) return tagsVal.some((t) => t.name === tag);
-            return tagsVal.name === tag;
-          }
-        )
-      )
-    : (projects ?? []);
+  const filtered = projects ?? [];
 
   if (filtered.length === 0) {
     return (
