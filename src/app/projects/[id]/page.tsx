@@ -14,6 +14,9 @@ import {
 import { AboutTab } from "./about-tab";
 import { CommentsSection } from "@/components/comments/comments-section";
 import { DevlogSection } from "@/components/devlog/devlog-section";
+import { VotePanel } from "@/components/voting/vote-panel";
+import { VoteBottomBar } from "@/components/voting/vote-bottom-bar";
+import { getUserVotes } from "@/lib/actions/votes";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -117,6 +120,28 @@ export default async function ProjectDetailPage({ params }: Props) {
 
   const counts = await getCounts(id);
 
+  // Voting data
+  const cohortId = project.cohort_id;
+
+  const [profileData, votingSession] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("can_vote")
+      .eq("id", user?.id ?? "")
+      .maybeSingle(),
+    cohortId
+      ? supabase
+          .from("voting_sessions")
+          .select("status")
+          .eq("cohort_id", cohortId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const canVote = profileData.data?.can_vote ?? false;
+  const sessionStatus = votingSession.data?.status ?? null;
+  const userVotes = cohortId ? await getUserVotes(cohortId) : [];
+
   // Extract tags
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tags: string[] = (project.project_tags ?? [])
@@ -142,7 +167,10 @@ export default async function ProjectDetailPage({ params }: Props) {
       className="min-h-screen"
       style={{ backgroundColor: "#15333B", color: "#F0F0F0" }}
     >
-      <div className="max-w-4xl mx-auto px-4 py-10 space-y-8">
+      <div className="max-w-6xl mx-auto px-4 py-10">
+      <div className="flex gap-8 items-start">
+      {/* Main content */}
+      <div className="flex-1 min-w-0 space-y-8">
         {/* Cover Image */}
         {project.cover_image_url && (
           <div className="relative w-full aspect-video rounded-2xl overflow-hidden">
@@ -284,6 +312,38 @@ export default async function ProjectDetailPage({ params }: Props) {
           </TabsContent>
         </Tabs>
       </div>
+      {/* Right sidebar — VotePanel */}
+      {canVote && sessionStatus === "open" && (
+        <aside className="hidden lg:block w-64 shrink-0 sticky top-24">
+          <VotePanel
+            projectId={id}
+            projectOwnerId={project.owner_id}
+            currentUserId={user?.id ?? null}
+            canVote={canVote}
+            sessionStatus={sessionStatus}
+            userVotes={userVotes}
+          />
+        </aside>
+      )}
+      </div>
+      {/* Mobile VotePanel — below hero */}
+      {canVote && sessionStatus === "open" && (
+        <div className="lg:hidden mt-6">
+          <VotePanel
+            projectId={id}
+            projectOwnerId={project.owner_id}
+            currentUserId={user?.id ?? null}
+            canVote={canVote}
+            sessionStatus={sessionStatus}
+            userVotes={userVotes}
+          />
+        </div>
+      )}
+      </div>
+      {/* Vote bottom bar */}
+      {canVote && sessionStatus === "open" && (
+        <VoteBottomBar userVotes={userVotes} />
+      )}
     </main>
   );
 }

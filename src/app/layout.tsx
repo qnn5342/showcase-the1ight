@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthButton } from "@/components/auth/AuthButton";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Showcase The1ight",
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </header>
           <main className="flex-1">{children}</main>
         </div>
+        <Toaster richColors position="bottom-right" />
       </body>
     </html>
   );
