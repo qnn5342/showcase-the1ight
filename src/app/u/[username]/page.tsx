@@ -55,9 +55,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Profile not found" };
   }
 
+  const projects = await getUserProjects(profile.id);
+
   return {
     title: `${profile.display_name} — The1ight Showcase`,
     description: profile.bio ?? `Projects by ${profile.display_name} on The1ight Showcase`,
+    openGraph: {
+      title: `${profile.display_name} — The1ight Showcase`,
+      description: profile.bio ?? `Projects by ${profile.display_name} on The1ight Showcase`,
+      images: [
+        {
+          url: `/api/og?type=profile&title=${encodeURIComponent(profile.display_name ?? username)}&avatar=${encodeURIComponent(profile.avatar_url ?? "")}&projectCount=${projects.length}`,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
   };
 }
 

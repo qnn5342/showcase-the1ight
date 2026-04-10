@@ -94,7 +94,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: project.title,
       description: project.tagline ?? project.description?.slice(0, 160) ?? "",
-      images: project.cover_image_url ? [project.cover_image_url] : [],
+      images: [
+        {
+          url: `/api/og?type=project&title=${encodeURIComponent(project.title)}&author=${encodeURIComponent((project.profiles as { display_name?: string | null } | null)?.display_name ?? "")}&cover=${encodeURIComponent(project.cover_image_url ?? "")}`,
+          width: 1200,
+          height: 630,
+        },
+      ],
     },
   };
 }
