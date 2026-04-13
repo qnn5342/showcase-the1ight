@@ -326,15 +326,18 @@ export function VotingTab({
               <SelectContent
                 style={{ backgroundColor: "#214C54", borderColor: "#3E5E63" }}
               >
-                {cohortProjects.map((p) => (
-                  <SelectItem
-                    key={p.id}
-                    value={p.id}
-                    style={{ color: "#F0F0F0" }}
-                  >
-                    {p.title}
-                  </SelectItem>
-                ))}
+                {cohortProjects.map((p) => {
+                  const cohort = cohorts.find((c) => c.id === p.cohort_id);
+                  return (
+                    <SelectItem
+                      key={p.id}
+                      value={p.id}
+                      style={{ color: "#F0F0F0" }}
+                    >
+                      {p.title} — {cohort?.name ?? "Unknown"}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
