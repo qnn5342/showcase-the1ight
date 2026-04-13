@@ -37,6 +37,7 @@ async function getProject(id: string) {
       tagline,
       description,
       cover_image_url,
+      cover_focus_position,
       live_url,
       github_url,
       status,
@@ -187,6 +188,7 @@ export default async function ProjectDetailPage({ params }: Props) {
               fill
               sizes="(max-width: 1024px) 100vw, 896px"
               className="object-cover"
+              style={{ objectPosition: (project as Record<string, unknown>).cover_focus_position as string || "50% 50%" }}
               priority
             />
           </div>

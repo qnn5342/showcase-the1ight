@@ -1,19 +1,30 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import imageCompression from "browser-image-compression";
 import { createClient } from "@/lib/supabase/client";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, Move } from "lucide-react";
 
 interface CoverUploadProps {
   value?: string;
   onChange: (url: string) => void;
+  focusPosition?: string;
+  onFocusChange?: (position: string) => void;
 }
 
-export function CoverUpload({ value, onChange }: CoverUploadProps) {
+export function CoverUpload({
+  value,
+  onChange,
+  focusPosition = "50% 50%",
+  onFocusChange,
+}: CoverUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [repositioning, setRepositioning] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const draggingRef = useRef(false);
+  const startRef = useRef({ x: 0, y: 0, posX: 50, posY: 50 });
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -34,7 +45,9 @@ export function CoverUpload({ value, onChange }: CoverUploadProps) {
 
         const supabase = createClient();
 
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (!session) {
           setError("Bạn cần đăng nhập để upload ảnh.");
           return;
@@ -57,13 +70,14 @@ export function CoverUpload({ value, onChange }: CoverUploadProps) {
         } = supabase.storage.from("project-covers").getPublicUrl(fileName);
 
         onChange(publicUrl);
+        onFocusChange?.("50% 50%");
       } catch {
         setError("Có lỗi xảy ra khi upload ảnh.");
       } finally {
         setUploading(false);
       }
     },
-    [onChange]
+    [onChange, onFocusChange]
   );
 
   const handleDrop = useCallback(
@@ -83,24 +97,89 @@ export function CoverUpload({ value, onChange }: CoverUploadProps) {
 
   const handleClear = () => {
     onChange("");
+    onFocusChange?.("50% 50%");
+  };
+
+  // Focal point drag handlers
+  const parseFocus = (pos: string) => {
+    const parts = pos.split(" ").map((p) => parseFloat(p));
+    return { x: parts[0] ?? 50, y: parts[1] ?? 50 };
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (!repositioning) return;
+    e.preventDefault();
+    draggingRef.current = true;
+    const focus = parseFocus(focusPosition);
+    startRef.current = { x: e.clientX, y: e.clientY, posX: focus.x, posY: focus.y };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!draggingRef.current || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const dx = ((e.clientX - startRef.current.x) / rect.width) * 100;
+    const dy = ((e.clientY - startRef.current.y) / rect.height) * 100;
+    // Invert: dragging right means object-position moves left
+    const newX = Math.min(100, Math.max(0, startRef.current.posX - dx));
+    const newY = Math.min(100, Math.max(0, startRef.current.posY - dy));
+    onFocusChange?.(`${Math.round(newX)}% ${Math.round(newY)}%`);
+  };
+
+  const handlePointerUp = () => {
+    draggingRef.current = false;
   };
 
   return (
     <div className="space-y-2">
       {value ? (
-        <div className="relative rounded-lg overflow-hidden border border-[#3E5E63]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={value}
-            alt="Cover preview"
-            className="w-full h-48 object-cover"
-          />
+        <div className="space-y-2">
+          <div
+            ref={containerRef}
+            className="relative rounded-lg overflow-hidden border border-[#3E5E63]"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            style={{ cursor: repositioning ? "grab" : "default" }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={value}
+              alt="Cover preview"
+              className="w-full h-48 pointer-events-none select-none"
+              style={{
+                objectFit: "cover",
+                objectPosition: focusPosition,
+              }}
+              draggable={false}
+            />
+            {repositioning && (
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center pointer-events-none">
+                <span className="text-white text-sm font-medium bg-black/60 px-3 py-1.5 rounded-full">
+                  Kéo để chỉnh vị trí
+                </span>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={handleClear}
+              className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
           <button
             type="button"
-            onClick={handleClear}
-            className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+            onClick={() => setRepositioning(!repositioning)}
+            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors"
+            style={{
+              borderColor: repositioning ? "#FFD94C" : "#3E5E63",
+              color: repositioning ? "#FFD94C" : "#F0F0F0",
+              backgroundColor: repositioning ? "#FFD94C10" : "transparent",
+            }}
           >
-            <X className="w-4 h-4" />
+            <Move className="w-3 h-3" />
+            {repositioning ? "Xong" : "Chỉnh vị trí"}
           </button>
         </div>
       ) : (

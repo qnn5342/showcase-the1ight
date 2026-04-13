@@ -20,6 +20,7 @@ export const projectSchema = z.object({
     .or(z.literal("")),
   description: z.string().optional(),
   cover_image_url: z.string().optional(),
+  cover_focus_position: z.string().optional(),
   cohort_id: z.string().min(1, "Chọn khoá và lớp"),
   status: z.enum(["draft", "published"]),
   tags: z

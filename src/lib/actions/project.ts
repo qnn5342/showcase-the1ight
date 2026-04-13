@@ -30,6 +30,7 @@ export async function updateProject(
       live_url: projectData.live_url,
       github_url: projectData.github_url || null,
       cover_image_url: projectData.cover_image_url || null,
+      cover_focus_position: projectData.cover_focus_position || "50% 50%",
       status: projectData.status,
     })
     .eq("id", projectId)
@@ -81,6 +82,7 @@ export async function createProject(formData: ProjectFormValues) {
       live_url: projectData.live_url,
       github_url: projectData.github_url || null,
       cover_image_url: projectData.cover_image_url || null,
+      cover_focus_position: projectData.cover_focus_position || "50% 50%",
       status: projectData.status,
     })
     .select("id")

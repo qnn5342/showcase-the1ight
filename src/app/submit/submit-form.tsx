@@ -41,6 +41,7 @@ export function SubmitForm({ projectId, initialValues }: SubmitFormProps) {
       github_url: initialValues?.github_url ?? "",
       description: initialValues?.description ?? "",
       cover_image_url: initialValues?.cover_image_url ?? "",
+      cover_focus_position: initialValues?.cover_focus_position ?? "50% 50%",
       cohort_id: initialValues?.cohort_id ?? "",
       status: initialValues?.status ?? "draft",
       tags: initialValues?.tags ?? [],
@@ -161,7 +162,12 @@ export function SubmitForm({ projectId, initialValues }: SubmitFormProps) {
           name="cover_image_url"
           control={control}
           render={({ field }) => (
-            <CoverUpload value={field.value} onChange={field.onChange} />
+            <CoverUpload
+              value={field.value}
+              onChange={field.onChange}
+              focusPosition={watch("cover_focus_position") || "50% 50%"}
+              onFocusChange={(pos) => setValue("cover_focus_position", pos)}
+            />
           )}
         />
       </div>

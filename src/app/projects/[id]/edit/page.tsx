@@ -20,7 +20,7 @@ export default async function EditProjectPage({ params }: Props) {
   const { data: project } = await supabase
     .from("projects")
     .select(
-      `id, title, tagline, description, live_url, github_url, cover_image_url, status, owner_id, cohort_id,
+      `id, title, tagline, description, live_url, github_url, cover_image_url, cover_focus_position, status, owner_id, cohort_id,
        project_tags ( tags ( name ) )`
     )
     .eq("id", id)
@@ -55,6 +55,7 @@ export default async function EditProjectPage({ params }: Props) {
           live_url: project.live_url ?? "",
           github_url: project.github_url ?? "",
           cover_image_url: project.cover_image_url ?? "",
+          cover_focus_position: (project as Record<string, unknown>).cover_focus_position as string ?? "50% 50%",
           cohort_id: project.cohort_id,
           status: project.status as "draft" | "published",
           tags,

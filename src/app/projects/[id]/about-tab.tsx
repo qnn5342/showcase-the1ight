@@ -1,9 +1,11 @@
 "use client";
 
+import { useRef } from "react";
 import DOMPurify from "dompurify";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
+import { ImageLightbox } from "@/components/ui/image-lightbox";
 
 interface AboutTabProps {
   content: string;
@@ -14,6 +16,8 @@ function isHTML(str: string): boolean {
 }
 
 export function AboutTab({ content }: AboutTabProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   if (!content) {
     return (
       <p className="text-sm" style={{ color: "#F0F0F0", opacity: 0.6 }}>
@@ -35,19 +39,23 @@ export function AboutTab({ content }: AboutTabProps) {
     });
 
     return (
-      <div
-        className="prose prose-invert max-w-none"
-        dangerouslySetInnerHTML={{ __html: clean }}
-      />
+      <>
+        <div
+          ref={containerRef}
+          className="prose prose-invert max-w-none"
+          dangerouslySetInnerHTML={{ __html: clean }}
+        />
+        <ImageLightbox containerRef={containerRef} />
+      </>
     );
   }
 
-  // Fallback: render as markdown for old plain-text descriptions
   return (
-    <div className="prose prose-invert max-w-none">
+    <div ref={containerRef} className="prose prose-invert max-w-none">
       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
         {content}
       </ReactMarkdown>
+      <ImageLightbox containerRef={containerRef} />
     </div>
   );
 }
