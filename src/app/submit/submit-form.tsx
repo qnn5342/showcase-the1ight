@@ -7,7 +7,7 @@ import { projectSchema, type ProjectFormValues } from "@/lib/validations/project
 import { createProject, updateProject } from "@/lib/actions/project";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/editor/rich-text-editor";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { CoverUpload } from "@/components/submit/cover-upload";
@@ -139,15 +139,18 @@ export function SubmitForm({ projectId, initialValues }: SubmitFormProps) {
 
       {/* Description */}
       <div className="space-y-1.5">
-        <Label htmlFor="description" className="text-[#FDF5DA]/70">
+        <Label className="text-[#FDF5DA]/70">
           Mô tả chi tiết (tuỳ chọn)
         </Label>
-        <Textarea
-          id="description"
-          placeholder="Mô tả về tính năng, công nghệ sử dụng, hành trình xây dựng..."
-          rows={8}
-          className="bg-[#15333B] border-[#3E5E63] text-[#F0F0F0] placeholder:text-[#F0F0F0]/30 focus-visible:ring-[#FFD94C]/50 resize-y"
-          {...register("description")}
+        <Controller
+          name="description"
+          control={control}
+          render={({ field }) => (
+            <RichTextEditor
+              content={field.value ?? ""}
+              onChange={field.onChange}
+            />
+          )}
         />
       </div>
 
