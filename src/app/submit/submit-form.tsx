@@ -145,8 +145,8 @@ export function SubmitForm({ projectId, initialValues }: SubmitFormProps) {
         <Textarea
           id="description"
           placeholder="Mô tả về tính năng, công nghệ sử dụng, hành trình xây dựng..."
-          rows={4}
-          className="bg-[#15333B] border-[#3E5E63] text-[#F0F0F0] placeholder:text-[#F0F0F0]/30 focus-visible:ring-[#FFD94C]/50 resize-none"
+          rows={8}
+          className="bg-[#15333B] border-[#3E5E63] text-[#F0F0F0] placeholder:text-[#F0F0F0]/30 focus-visible:ring-[#FFD94C]/50 resize-y"
           {...register("description")}
         />
       </div>
