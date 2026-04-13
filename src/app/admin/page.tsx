@@ -18,7 +18,7 @@ export default async function AdminPage() {
   ] = await Promise.all([
     supabase
       .from("cohorts")
-      .select("id, name, slug, status")
+      .select("id, name, slug, status, class_code")
       .order("created_at", { ascending: false }),
     supabase
       .from("voting_sessions")

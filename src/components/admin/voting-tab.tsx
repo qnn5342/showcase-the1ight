@@ -19,7 +19,7 @@ import {
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 
-type Cohort = { id: string; name: string; slug: string; status: string };
+type Cohort = { id: string; name: string; slug: string; status: string; class_code: string | null };
 type Session = {
   id: string;
   cohort_id: string;
@@ -172,7 +172,7 @@ export function VotingTab({
           >
             {cohorts.map((c) => (
               <SelectItem key={c.id} value={c.id} style={{ color: "#F0F0F0" }}>
-                {c.name}
+                {c.class_code ? `${c.class_code} — ${c.name}` : c.name}
               </SelectItem>
             ))}
           </SelectContent>
