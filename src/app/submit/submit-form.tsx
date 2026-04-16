@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { projectSchema, type ProjectFormValues } from "@/lib/validations/project";
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RichTextEditor } from "@/components/editor/rich-text-editor";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { CoverUpload } from "@/components/submit/cover-upload";
 import { TagSelector } from "@/components/submit/tag-selector";
 import { CohortSelector } from "@/components/submit/cohort-selector";
@@ -22,8 +21,11 @@ interface SubmitFormProps {
 
 export function SubmitForm({ projectId, initialValues }: SubmitFormProps) {
   const isEdit = !!projectId;
-  const [submitting, setSubmitting] = useState(false);
+  const currentStatus = initialValues?.status ?? "draft";
+  const isAlreadyPublished = isEdit && currentStatus === "published";
+  const [submitting, setSubmitting] = useState<"draft" | "published" | null>(null);
   const [serverError, setServerError] = useState<string[] | null>(null);
+  const lockRef = useRef(false);
 
   const {
     register,
@@ -43,35 +45,41 @@ export function SubmitForm({ projectId, initialValues }: SubmitFormProps) {
       cover_image_url: initialValues?.cover_image_url ?? "",
       cover_focus_position: initialValues?.cover_focus_position ?? "50% 50%",
       cohort_id: initialValues?.cohort_id ?? "",
-      status: initialValues?.status ?? "draft",
+      status: isAlreadyPublished ? "published" : "draft",
       tags: initialValues?.tags ?? [],
     },
   });
 
-  const statusValue = watch("status");
-
-  const onSubmit = async (data: ProjectFormValues) => {
-    setSubmitting(true);
-    setServerError(null);
-    try {
-      const result = isEdit
-        ? await updateProject(projectId, data)
-        : await createProject(data);
-      if (result?.error) {
-        if ("_form" in result.error) {
-          setServerError(result.error._form as string[]);
-        }
+  const submitAs = (status: "draft" | "published") =>
+    async (e?: React.BaseSyntheticEvent) => {
+      if (lockRef.current) return;
+      lockRef.current = true;
+      try {
+        await handleSubmit(async (data) => {
+          setSubmitting(status);
+          setServerError(null);
+          const payload = { ...data, status };
+          const result = isEdit
+            ? await updateProject(projectId, payload)
+            : await createProject(payload);
+          // Success path throws NEXT_REDIRECT above; we only reach here on server error.
+          if (result?.error && "_form" in result.error) {
+            setServerError(result.error._form as string[]);
+          }
+          setSubmitting(null);
+        })(e);
+      } catch {
+        // redirect() throws on success — keep spinner until navigation unmounts.
+      } finally {
+        // Always release lock so user can retry after validation/server errors.
+        // On redirect success, component unmounts before this matters.
+        lockRef.current = false;
       }
-    } catch {
-      // redirect() throws — that's expected on success
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    };
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={(e) => e.preventDefault()}
       className="space-y-6 bg-[#214C54] rounded-xl p-6 border border-[#3E5E63]"
     >
       {/* Title */}
@@ -211,27 +219,6 @@ export function SubmitForm({ projectId, initialValues }: SubmitFormProps) {
         )}
       </div>
 
-      {/* Status toggle */}
-      <div className="flex items-center justify-between rounded-lg border border-[#3E5E63] px-4 py-3 bg-[#15333B]/40">
-        <div>
-          <p className="text-[#FDF5DA] text-sm font-medium">
-            {statusValue === "published" ? "Publish ngay" : "Lưu nháp"}
-          </p>
-          <p className="text-[#F0F0F0]/40 text-xs mt-0.5">
-            {statusValue === "published"
-              ? "Dự án sẽ hiển thị công khai"
-              : "Chỉ bạn thấy, chưa công khai"}
-          </p>
-        </div>
-        <Switch
-          checked={statusValue === "published"}
-          onCheckedChange={(checked) =>
-            setValue("status", checked ? "published" : "draft")
-          }
-          className="data-[state=checked]:bg-[#4E8770]"
-        />
-      </div>
-
       {/* Server error */}
       {serverError && (
         <div className="rounded-lg bg-red-950/50 border border-red-800 px-4 py-3">
@@ -243,25 +230,46 @@ export function SubmitForm({ projectId, initialValues }: SubmitFormProps) {
         </div>
       )}
 
-      {/* Submit */}
-      <Button
-        type="submit"
-        disabled={submitting}
-        className="w-full bg-[#FFD94C] hover:bg-[#FFD94C]/90 text-[#15333B] font-semibold h-11 text-base"
-      >
-        {submitting ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Đang submit...
-          </>
-        ) : isEdit ? (
-          statusValue === "published" ? "Lưu & Publish" : "Lưu thay đổi"
-        ) : statusValue === "published" ? (
-          "Submit & Publish"
-        ) : (
-          "Lưu nháp"
+      {/* Submit buttons */}
+      <div className="flex flex-col-reverse sm:flex-row gap-3">
+        {!isAlreadyPublished && (
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={submitting !== null}
+            onClick={submitAs("draft")}
+            className="flex-1 h-11 text-base text-[#FDF5DA] hover:bg-[#15333B] border border-[#3E5E63]"
+          >
+            {submitting === "draft" ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Đang lưu...
+              </>
+            ) : (
+              "Lưu nháp"
+            )}
+          </Button>
         )}
-      </Button>
+        <Button
+          type="button"
+          disabled={submitting !== null}
+          onClick={submitAs("published")}
+          className="flex-1 bg-[#FFD94C] hover:bg-[#FFD94C]/90 text-[#15333B] font-semibold h-11 text-base"
+        >
+          {submitting === "published" ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Đang publish...
+            </>
+          ) : isAlreadyPublished ? (
+            "Lưu thay đổi"
+          ) : isEdit ? (
+            "Publish ngay"
+          ) : (
+            "Publish"
+          )}
+        </Button>
+      </div>
     </form>
   );
 }
