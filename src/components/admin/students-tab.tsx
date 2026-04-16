@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toggleStudentVoteAccess } from "@/lib/actions/voting-session";
+import { adminUpdateStudentCohort } from "@/lib/actions/profile";
 import { toast } from "sonner";
 
 type Profile = {
@@ -20,6 +21,7 @@ type Cohort = {
   name: string;
   slug: string;
   status: string;
+  class_code: string | null;
 };
 
 export function StudentsTab({
@@ -39,7 +41,7 @@ export function StudentsTab({
 
   const cohortNameMap: Record<string, string> = {};
   for (const c of cohorts) {
-    cohortNameMap[c.slug] = c.name;
+    cohortNameMap[c.slug] = c.class_code ? `${c.class_code} — ${c.name}` : c.name;
   }
 
   return (
@@ -57,7 +59,7 @@ export function StudentsTab({
           </h3>
           <div className="space-y-2">
             {members.map((profile) => (
-              <StudentRow key={profile.id} profile={profile} />
+              <StudentRow key={profile.id} profile={profile} cohorts={cohorts} />
             ))}
           </div>
         </div>
@@ -66,8 +68,9 @@ export function StudentsTab({
   );
 }
 
-function StudentRow({ profile }: { profile: Profile }) {
+function StudentRow({ profile, cohorts }: { profile: Profile; cohorts: Cohort[] }) {
   const [isPending, startTransition] = useTransition();
+  const [isCohortPending, startCohortTransition] = useTransition();
 
   function handleToggle(value: boolean) {
     startTransition(async () => {
@@ -82,9 +85,20 @@ function StudentRow({ profile }: { profile: Profile }) {
     });
   }
 
+  function handleCohortChange(newSlug: string) {
+    startCohortTransition(async () => {
+      const result = await adminUpdateStudentCohort(profile.id, newSlug || null);
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Đã cập nhật cohort.");
+      }
+    });
+  }
+
   return (
     <div
-      className="flex items-center justify-between rounded-lg border p-3"
+      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-lg border p-3"
       style={{ backgroundColor: "#214C54", borderColor: "#3E5E63" }}
     >
       <div className="flex items-center gap-3">
@@ -102,7 +116,20 @@ function StudentRow({ profile }: { profile: Profile }) {
           )}
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        <select
+          value={profile.cohort_slug ?? ""}
+          onChange={(e) => handleCohortChange(e.target.value)}
+          disabled={isCohortPending}
+          className="h-8 px-2 text-xs rounded-md bg-[#15333B] border border-[#3E5E63] text-[#F0F0F0] focus:ring-2 focus:ring-[#FFD94C]/50 focus:outline-none disabled:opacity-50"
+        >
+          <option value="">— chưa gán —</option>
+          {cohorts.map((c) => (
+            <option key={c.id} value={c.slug}>
+              {c.class_code ? `${c.class_code} — ${c.name}` : c.name}
+            </option>
+          ))}
+        </select>
         <span className="text-xs" style={{ color: "#9ca3af" }}>
           {profile.can_vote ? "Có thể vote" : "Chưa vote"}
         </span>

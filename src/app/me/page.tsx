@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { EditProfileForm } from "@/components/me/edit-profile-form";
 import { MyVotesSummary } from "@/components/me/my-votes-summary";
+import { CohortPickerBanner } from "@/components/me/cohort-picker-banner";
 
 export const metadata = { title: "Hồ sơ của bạn — Showcase The1ight" };
 
@@ -40,6 +41,12 @@ export default async function MePage() {
     .eq("owner_id", user.id)
     .order("created_at", { ascending: false });
 
+  // Fetch all cohorts for picker
+  const { data: cohorts } = await supabase
+    .from("cohorts")
+    .select("id, name, slug, class_code")
+    .order("created_at", { ascending: false });
+
   // Fetch active cohort to scope votes
   const { data: activeCohort } = await supabase
     .from("cohorts")
@@ -72,6 +79,11 @@ export default async function MePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 space-y-10">
+      {/* Cohort picker banner — shown only if cohort_slug is NULL */}
+      {!profile?.cohort_slug && (
+        <CohortPickerBanner cohorts={cohorts ?? []} />
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-4">
         {avatarUrl ? (
@@ -174,7 +186,9 @@ export default async function MePage() {
               github_url: profile?.github_url ?? "",
               linkedin_url: profile?.linkedin_url ?? "",
               website_url: profile?.website_url ?? "",
+              cohort_slug: profile?.cohort_slug ?? "",
             }}
+            cohorts={cohorts ?? []}
           />
         </div>
       </details>

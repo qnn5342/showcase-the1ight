@@ -35,3 +35,63 @@ export async function updateProfile(input: z.infer<typeof editProfileSchema>) {
   revalidatePath("/me");
   return { success: true };
 }
+
+export async function updateMyCohort(cohortSlug: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { data: cohort } = await supabase
+    .from("cohorts")
+    .select("slug")
+    .eq("slug", cohortSlug)
+    .single();
+  if (!cohort) return { error: "Batch không tồn tại." };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ cohort_slug: cohort.slug })
+    .eq("id", user.id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/me");
+  return { success: true };
+}
+
+export async function adminUpdateStudentCohort(
+  targetUserId: string,
+  cohortSlug: string | null
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { data: caller } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (caller?.role !== "admin") return { error: "Chỉ admin được đổi cohort." };
+
+  if (cohortSlug) {
+    const { data: cohort } = await supabase
+      .from("cohorts")
+      .select("slug")
+      .eq("slug", cohortSlug)
+      .single();
+    if (!cohort) return { error: "Batch không tồn tại." };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ cohort_slug: cohortSlug })
+    .eq("id", targetUserId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/admin");
+  return { success: true };
+}

@@ -8,22 +8,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { updateProfile } from "@/lib/actions/profile";
+import { updateProfile, updateMyCohort } from "@/lib/actions/profile";
 
 const editProfileSchema = z.object({
   bio: z.string().max(300, "Bio tối đa 300 ký tự.").optional(),
   github_url: z.string().url("GitHub URL không hợp lệ.").optional().or(z.literal("")),
   linkedin_url: z.string().url("LinkedIn URL không hợp lệ.").optional().or(z.literal("")),
   website_url: z.string().url("Website URL không hợp lệ.").optional().or(z.literal("")),
+  cohort_slug: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof editProfileSchema>;
 
+type Cohort = {
+  id: string;
+  name: string;
+  slug: string;
+  class_code: string | null;
+};
+
 interface EditProfileFormProps {
   defaultValues: FormValues;
+  cohorts: Cohort[];
 }
 
-export function EditProfileForm({ defaultValues }: EditProfileFormProps) {
+export function EditProfileForm({ defaultValues, cohorts }: EditProfileFormProps) {
   const {
     register,
     handleSubmit,
@@ -37,16 +46,43 @@ export function EditProfileForm({ defaultValues }: EditProfileFormProps) {
   const bioValue = watch("bio") ?? "";
 
   async function onSubmit(values: FormValues) {
-    const result = await updateProfile(values);
+    const { cohort_slug, ...profileValues } = values;
+    const result = await updateProfile(profileValues);
     if (result?.error) {
       toast.error(result.error);
-    } else {
-      toast.success("Hồ sơ đã được cập nhật.");
+      return;
     }
+    // Sync cohort if changed
+    if (cohort_slug && cohort_slug !== defaultValues.cohort_slug) {
+      const cohortResult = await updateMyCohort(cohort_slug);
+      if (cohortResult?.error) {
+        toast.error(cohortResult.error);
+        return;
+      }
+    }
+    toast.success("Hồ sơ đã được cập nhật.");
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="space-y-1.5">
+        <Label htmlFor="cohort_slug" className="text-[#F0F0F0]">
+          Khoá & Lớp
+        </Label>
+        <select
+          id="cohort_slug"
+          {...register("cohort_slug")}
+          className="w-full h-10 px-3 rounded-md border border-[#3E5E63] bg-[#214C54] text-[#F0F0F0] focus:ring-2 focus:ring-[#FFD94C]/50 focus:outline-none"
+        >
+          <option value="">Chưa chọn</option>
+          {cohorts.map((c) => (
+            <option key={c.id} value={c.slug}>
+              {c.class_code ? `${c.class_code} — ${c.name}` : c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="space-y-1.5">
         <Label htmlFor="bio" className="text-[#F0F0F0]">
           Giới thiệu bản thân

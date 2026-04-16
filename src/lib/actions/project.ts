@@ -91,6 +91,26 @@ export async function createProject(formData: ProjectFormValues) {
   if (projectError || !project)
     return { error: { _form: ["Có lỗi xảy ra, thử lại sau."] } };
 
+  // Auto-link profile.cohort_slug on first submit (best-effort)
+  const { data: currentProfile } = await supabase
+    .from("profiles")
+    .select("cohort_slug")
+    .eq("id", user.id)
+    .single();
+  if (!currentProfile?.cohort_slug) {
+    const { data: cohort } = await supabase
+      .from("cohorts")
+      .select("slug")
+      .eq("id", cohort_id)
+      .single();
+    if (cohort?.slug) {
+      await supabase
+        .from("profiles")
+        .update({ cohort_slug: cohort.slug })
+        .eq("id", user.id);
+    }
+  }
+
   // Link tags
   for (const tagName of tags) {
     const { data: tag } = await supabase
