@@ -1,17 +1,28 @@
 import { z } from "zod";
 
+const httpsUrl = z
+  .string()
+  .trim()
+  .min(1, "URL không được để trống")
+  .transform((val) =>
+    /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(val) ? val : `https://${val}`
+  )
+  .pipe(
+    z
+      .string()
+      .url("URL không hợp lệ")
+      .refine((val) => val.startsWith("https://"), {
+        message: "URL phải bắt đầu bằng https://",
+      })
+  );
+
 export const projectSchema = z.object({
   title: z.string().min(1, "Tiêu đề không được để trống").max(100),
   tagline: z.string().min(1, "Tagline không được để trống").max(100),
-  live_url: z
-    .string()
-    .min(1, "URL không được để trống")
-    .url("URL không hợp lệ")
-    .refine((val) => val.startsWith("https://"), {
-      message: "URL phải bắt đầu bằng https://",
-    }),
+  live_url: httpsUrl,
   github_url: z
     .string()
+    .trim()
     .url("URL không hợp lệ")
     .refine((val) => val.startsWith("https://"), {
       message: "URL phải bắt đầu bằng https://",
