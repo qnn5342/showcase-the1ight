@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { unstable_rethrow } from "next/navigation";
 import { projectSchema, type ProjectFormValues } from "@/lib/validations/project";
 import { createProject, updateProject } from "@/lib/actions/project";
 import { Button } from "@/components/ui/button";
@@ -62,17 +63,18 @@ export function SubmitForm({ projectId, initialValues }: SubmitFormProps) {
           const result = isEdit
             ? await updateProject(projectId, payload)
             : await createProject(payload);
-          // Success path throws NEXT_REDIRECT above; we only reach here on server error.
+          // Success path redirects from the server action. If we are still here,
+          // the action returned validation/server errors and the user can retry.
           if (result?.error && "_form" in result.error) {
             setServerError(result.error._form as string[]);
           }
           setSubmitting(null);
         })(e);
-      } catch {
-        // redirect() throws on success — keep spinner until navigation unmounts.
-      } finally {
-        // Always release lock so user can retry after validation/server errors.
-        // On redirect success, component unmounts before this matters.
+        lockRef.current = false;
+      } catch (error) {
+        unstable_rethrow(error);
+        setServerError(["Có lỗi xảy ra, thử lại sau."]);
+        setSubmitting(null);
         lockRef.current = false;
       }
     };
