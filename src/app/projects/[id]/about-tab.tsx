@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import DOMPurify from "dompurify";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -17,6 +17,28 @@ function isHTML(str: string): boolean {
 
 export function AboutTab({ content }: AboutTabProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const isHtmlContent = isHTML(content);
+  const [cleanHtml, setCleanHtml] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!content || !isHtmlContent) {
+      setCleanHtml(null);
+      return;
+    }
+
+    setCleanHtml(
+      DOMPurify.sanitize(content, {
+        ALLOWED_TAGS: [
+          "h1", "h2", "h3", "h4", "p", "br", "strong", "em", "u", "s",
+          "a", "img", "ul", "ol", "li", "blockquote", "pre", "code", "hr",
+          "div", "span",
+        ],
+        ALLOWED_ATTR: [
+          "href", "src", "alt", "title", "target", "rel", "class", "width", "height",
+        ],
+      })
+    );
+  }, [content, isHtmlContent]);
 
   if (!content) {
     return (
@@ -26,24 +48,13 @@ export function AboutTab({ content }: AboutTabProps) {
     );
   }
 
-  if (isHTML(content)) {
-    const clean = DOMPurify.sanitize(content, {
-      ALLOWED_TAGS: [
-        "h1", "h2", "h3", "h4", "p", "br", "strong", "em", "u", "s",
-        "a", "img", "ul", "ol", "li", "blockquote", "pre", "code", "hr",
-        "div", "span",
-      ],
-      ALLOWED_ATTR: [
-        "href", "src", "alt", "title", "target", "rel", "class", "width", "height",
-      ],
-    });
-
+  if (isHtmlContent) {
     return (
       <>
         <div
           ref={containerRef}
           className="prose prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: clean }}
+          dangerouslySetInnerHTML={{ __html: cleanHtml ?? "" }}
         />
         <ImageLightbox containerRef={containerRef} />
       </>
