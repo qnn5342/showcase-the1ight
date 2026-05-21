@@ -49,6 +49,15 @@ async function getProject(id: string) {
         avatar_url,
         cohort_slug
       ),
+      cohorts (
+        name,
+        slug,
+        class_code,
+        courses (
+          name,
+          slug
+        )
+      ),
       project_tags (
         tags (
           name
@@ -169,6 +178,24 @@ export default async function ProjectDetailPage({ params }: Props) {
   const authorName = profile?.display_name ?? "Unknown";
   const authorAvatar = profile?.avatar_url ?? "";
   const authorInitial = authorName.charAt(0).toUpperCase();
+  const cohort = Array.isArray((project as Record<string, unknown>).cohorts)
+    ? ((project as Record<string, unknown>).cohorts as unknown[])[0]
+    : (project as Record<string, unknown>).cohorts;
+  const cohortRecord = cohort as
+    | {
+        name?: string | null;
+        class_code?: string | null;
+        courses?: { name?: string | null } | { name?: string | null }[] | null;
+      }
+    | null
+    | undefined;
+  const course = Array.isArray(cohortRecord?.courses)
+    ? cohortRecord.courses[0]
+    : cohortRecord?.courses;
+  const cohortLabel =
+    [course?.name, cohortRecord?.name].filter(Boolean).join(" — ") ||
+    profile?.cohort_slug ||
+    "Cohort";
 
   return (
     <main
@@ -247,7 +274,7 @@ export default async function ProjectDetailPage({ params }: Props) {
               border: "none",
             }}
           >
-            Batch 3
+            {cohortLabel}
           </Badge>
         </div>
 
