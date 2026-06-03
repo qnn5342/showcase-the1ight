@@ -14,11 +14,11 @@ export function Footer() {
 
         {/* Nav */}
         <nav className="flex items-center gap-6 text-sm text-[#F0F0F0]/60">
-          <Link href="/" className="hover:text-[#FFD94C] transition-colors">
-            Gallery
+          <Link href="/#seasons" className="hover:text-[#FFD94C] transition-colors">
+            Theo lớp
           </Link>
-          <Link href="/results" className="hover:text-[#FFD94C] transition-colors">
-            Kết quả
+          <Link href="/#all-projects" className="hover:text-[#FFD94C] transition-colors">
+            Tất cả dự án
           </Link>
           <a
             href="https://the1ight.com"

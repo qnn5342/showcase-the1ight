@@ -32,11 +32,11 @@ export function FeaturedProjects({ projects }: FeaturedProjectsProps) {
               Dự án nổi bật
             </h2>
             <p className="mt-1 text-sm text-[#F0F0F0]/50">
-              Những sản phẩm đáng chú ý nhất từ học viên
+              3 sản phẩm mới nhất từ học viên The1ight
             </p>
           </div>
           <Link
-            href="#gallery"
+            href="#all-projects"
             className="text-sm text-[#FFD94C] hover:opacity-80 transition-opacity whitespace-nowrap"
           >
             Xem tất cả →

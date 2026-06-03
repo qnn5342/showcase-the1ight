@@ -56,7 +56,7 @@ export async function updateProject(
 
   revalidatePath("/");
   revalidatePath(`/projects/${projectId}`);
-  redirect(`/projects/${projectId}`);
+  return { success: true, projectId };
 }
 
 export async function createProject(formData: ProjectFormValues) {
@@ -126,5 +126,5 @@ export async function createProject(formData: ProjectFormValues) {
   }
 
   revalidatePath("/");
-  redirect(`/projects/${project.id}`);
+  return { success: true, projectId: project.id };
 }

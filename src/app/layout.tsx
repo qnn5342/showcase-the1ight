@@ -19,7 +19,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/" className="text-lg font-bold hover:opacity-80 transition-opacity" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#FDF5DA" }}>
                 Showcase The1ight
               </Link>
-              <AuthButton />
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/#seasons"
+                  className="hidden text-sm font-medium text-[#F0F0F0]/70 transition-colors hover:text-[#FFD94C] sm:inline-flex"
+                >
+                  Theo lớp
+                </Link>
+                <AuthButton />
+              </div>
             </div>
           </header>
           <main className="flex-1">{children}</main>

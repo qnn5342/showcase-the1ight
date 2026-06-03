@@ -18,10 +18,9 @@ export function HeroSection({ studentCount, projectCount }: HeroSectionProps) {
       />
 
       <div className="relative mx-auto max-w-4xl text-center">
-        {/* Cohort badge */}
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#FFD94C]/30 bg-[#FFD94C]/10 px-4 py-1.5 text-sm text-[#FFD94C]">
           <span>✦</span>
-          <span>Batch 3 đang diễn ra</span>
+          <span>Portfolio học viên theo từng lớp</span>
         </div>
 
         {/* Headline */}
@@ -40,10 +39,10 @@ export function HeroSection({ studentCount, projectCount }: HeroSectionProps) {
         {/* CTAs */}
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            href="#gallery"
+            href="#seasons"
             className="rounded-xl bg-[#FFD94C] px-7 py-3.5 text-sm font-bold text-[#15333B] transition-opacity hover:opacity-90"
           >
-            Khám phá Gallery →
+            Khám phá theo lớp →
           </Link>
           <Link
             href="#featured"

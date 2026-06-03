@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { unstable_rethrow } from "next/navigation";
+import { useRouter, unstable_rethrow } from "next/navigation";
 import { projectSchema, type ProjectFormValues } from "@/lib/validations/project";
 import { createProject, updateProject } from "@/lib/actions/project";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ export function SubmitForm({ projectId, initialValues }: SubmitFormProps) {
   const [submitting, setSubmitting] = useState<"draft" | "published" | null>(null);
   const [serverError, setServerError] = useState<string[] | null>(null);
   const lockRef = useRef(false);
+  const router = useRouter();
 
   const {
     register,
@@ -56,21 +57,33 @@ export function SubmitForm({ projectId, initialValues }: SubmitFormProps) {
       if (lockRef.current) return;
       lockRef.current = true;
       try {
-        await handleSubmit(async (data) => {
-          setSubmitting(status);
-          setServerError(null);
-          const payload = { ...data, status };
-          const result = isEdit
-            ? await updateProject(projectId, payload)
-            : await createProject(payload);
-          // Success path redirects from the server action. If we are still here,
-          // the action returned validation/server errors and the user can retry.
-          if (result?.error && "_form" in result.error) {
-            setServerError(result.error._form as string[]);
+        await handleSubmit(
+          async (data) => {
+            setSubmitting(status);
+            setServerError(null);
+            const payload = { ...data, status };
+            const result = isEdit
+              ? await updateProject(projectId, payload)
+              : await createProject(payload);
+
+            if (result?.error) {
+              if ("_form" in result.error) {
+                setServerError(result.error._form as string[]);
+              }
+              setSubmitting(null);
+              lockRef.current = false;
+            } else if (result?.success) {
+              router.push(`/projects/${result.projectId}`);
+              router.refresh();
+            } else {
+              setSubmitting(null);
+              lockRef.current = false;
+            }
+          },
+          () => {
+            lockRef.current = false;
           }
-          setSubmitting(null);
-        })(e);
-        lockRef.current = false;
+        )(e);
       } catch (error) {
         unstable_rethrow(error);
         setServerError(["Có lỗi xảy ra, thử lại sau."]);
