@@ -4,7 +4,10 @@ import { useTransition } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toggleStudentVoteAccess } from "@/lib/actions/voting-session";
-import { adminUpdateStudentCohort } from "@/lib/actions/profile";
+import {
+  adminUpdateStudentCohort,
+  adminUpdateUserRole,
+} from "@/lib/actions/profile";
 import { toast } from "sonner";
 
 type Profile = {
@@ -71,6 +74,7 @@ export function StudentsTab({
 function StudentRow({ profile, cohorts }: { profile: Profile; cohorts: Cohort[] }) {
   const [isPending, startTransition] = useTransition();
   const [isCohortPending, startCohortTransition] = useTransition();
+  const [isRolePending, startRoleTransition] = useTransition();
 
   function handleToggle(value: boolean) {
     startTransition(async () => {
@@ -92,6 +96,20 @@ function StudentRow({ profile, cohorts }: { profile: Profile; cohorts: Cohort[] 
         toast.error(result.error);
       } else {
         toast.success("Đã cập nhật cohort.");
+      }
+    });
+  }
+
+  function handleRoleChange(newRole: string) {
+    if (newRole !== "user" && newRole !== "admin") return;
+    startRoleTransition(async () => {
+      const result = await adminUpdateUserRole(profile.id, newRole);
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(
+          newRole === "admin" ? "Đã cấp quyền admin." : "Đã chuyển về user."
+        );
       }
     });
   }
@@ -129,6 +147,15 @@ function StudentRow({ profile, cohorts }: { profile: Profile; cohorts: Cohort[] 
               {c.class_code ? `${c.class_code} — ${c.name}` : c.name}
             </option>
           ))}
+        </select>
+        <select
+          value={profile.role}
+          onChange={(e) => handleRoleChange(e.target.value)}
+          disabled={isRolePending}
+          className="h-8 px-2 text-xs rounded-md bg-[#15333B] border border-[#3E5E63] text-[#F0F0F0] focus:ring-2 focus:ring-[#FFD94C]/50 focus:outline-none disabled:opacity-50"
+        >
+          <option value="user">user</option>
+          <option value="admin">admin</option>
         </select>
         <span className="text-xs" style={{ color: "#9ca3af" }}>
           {profile.can_vote ? "Có thể vote" : "Chưa vote"}

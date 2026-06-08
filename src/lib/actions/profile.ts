@@ -95,3 +95,34 @@ export async function adminUpdateStudentCohort(
   revalidatePath("/admin");
   return { success: true };
 }
+
+export async function adminUpdateUserRole(
+  targetUserId: string,
+  role: "user" | "admin"
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  if (targetUserId === user.id) {
+    return { error: "Không thể tự đổi role của chính mình." };
+  }
+
+  const { data: caller } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (caller?.role !== "admin") return { error: "Chỉ admin được đổi role." };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ role })
+    .eq("id", targetUserId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/admin");
+  return { success: true };
+}

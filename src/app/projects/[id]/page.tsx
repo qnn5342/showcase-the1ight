@@ -18,6 +18,7 @@ import { VotePanel } from "@/components/voting/vote-panel";
 import { VoteBottomBar } from "@/components/voting/vote-bottom-bar";
 import { getUserVotes } from "@/lib/actions/votes";
 import { OfflineBadge } from "@/components/projects/offline-badge";
+import { ProjectVideoSection } from "@/components/projects/project-video-section";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -40,6 +41,8 @@ async function getProject(id: string) {
       cover_focus_position,
       live_url,
       github_url,
+      presentation_youtube_url,
+      feedback_youtube_url,
       status,
       is_offline,
       created_at,
@@ -321,6 +324,21 @@ export default async function ProjectDetailPage({ params }: Props) {
             </a>
           )}
         </div>
+
+        <ProjectVideoSection
+          presentationUrl={
+            (project as Record<string, unknown>).presentation_youtube_url as
+              | string
+              | null
+              | undefined
+          }
+          feedbackUrl={
+            (project as Record<string, unknown>).feedback_youtube_url as
+              | string
+              | null
+              | undefined
+          }
+        />
 
         {/* Tabs */}
         <Tabs defaultValue="about" className="w-full">

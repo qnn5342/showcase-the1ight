@@ -4,6 +4,7 @@ import { CohortsTab } from "@/components/admin/cohorts-tab";
 import { VotingTab } from "@/components/admin/voting-tab";
 import { CommentsTab } from "@/components/admin/comments-tab";
 import { StudentsTab } from "@/components/admin/students-tab";
+import { ProjectMediaTab } from "@/components/admin/project-media-tab";
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -15,6 +16,7 @@ export default async function AdminPage() {
     { data: profiles },
     { data: juryPicks },
     { data: projects },
+    { data: projectMedia },
   ] = await Promise.all([
     supabase
       .from("cohorts")
@@ -41,6 +43,22 @@ export default async function AdminPage() {
       .from("projects")
       .select("id, title, cohort_id, status")
       .eq("status", "published"),
+    supabase
+      .from("projects")
+      .select(
+        `
+        id,
+        title,
+        status,
+        presentation_youtube_url,
+        feedback_youtube_url,
+        cohorts (
+          name,
+          class_code
+        )
+      `
+      )
+      .order("created_at", { ascending: false }),
   ]);
 
   return (
@@ -57,6 +75,9 @@ export default async function AdminPage() {
         </TabsTrigger>
         <TabsTrigger value="comments" style={{ color: "#F0F0F0" }}>
           Comments
+        </TabsTrigger>
+        <TabsTrigger value="project-media" style={{ color: "#F0F0F0" }}>
+          Project Media
         </TabsTrigger>
         <TabsTrigger value="students" style={{ color: "#F0F0F0" }}>
           Students
@@ -78,6 +99,10 @@ export default async function AdminPage() {
 
       <TabsContent value="comments">
         <CommentsTab comments={comments ?? []} />
+      </TabsContent>
+
+      <TabsContent value="project-media">
+        <ProjectMediaTab projects={projectMedia ?? []} />
       </TabsContent>
 
       <TabsContent value="students">
